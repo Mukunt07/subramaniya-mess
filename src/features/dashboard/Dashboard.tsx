@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useDashboard } from "./useDashboard";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import {
@@ -212,7 +213,7 @@ export default function Dashboard() {
                         <h3 className="text-lg font-semibold text-stone-800">Top Selling Categories</h3>
                         <p className="text-sm text-stone-400">Performance by category</p>
                     </div>
-                    <button className="text-sm text-emerald-600 font-medium hover:text-emerald-700">View Full Report</button>
+                    <Link to="/analytics" className="text-sm text-emerald-600 font-medium hover:text-emerald-700">View Full Report</Link>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
