@@ -21,7 +21,7 @@ export default function LoadingSpinner({
     };
 
     const containerClasses = fullScreen
-        ? "min-h-[60vh] flex flex-col items-center justify-center"
+        ? "min-h-[80vh] flex flex-col items-center justify-center"
         : "flex flex-col items-center justify-center p-8";
 
     return (

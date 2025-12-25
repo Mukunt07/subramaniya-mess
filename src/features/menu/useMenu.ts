@@ -18,13 +18,23 @@ export function useMenu() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const q = query(collection(db, "menuItems"), orderBy("category"), orderBy("name"));
+        // Query ordered by category only to avoid needing a composite index
+        const q = query(collection(db, "menuItems"), orderBy("category"));
         const unsubscribe = onSnapshot(q,
             (snapshot) => {
                 const menuItems = snapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
                 })) as MenuItem[];
+
+                // Secondary sort by name on client side
+                menuItems.sort((a, b) => {
+                    if (a.category === b.category) {
+                        return a.name.localeCompare(b.name);
+                    }
+                    return 0; // Category order is already handled by Firestore
+                });
+
                 setItems(menuItems);
                 setLoading(false);
             },

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
+import OfflineIndicator from "../ui/OfflineIndicator";
 import { cn } from "../../lib/utils";
 
 export default function Layout() {
@@ -15,6 +16,7 @@ export default function Layout() {
                     isCollapsed ? "ml-20" : "ml-64"
                 )}
             >
+                <OfflineIndicator />
                 <Outlet />
             </main>
         </div>

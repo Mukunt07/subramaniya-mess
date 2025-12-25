@@ -38,15 +38,15 @@ export default function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
             )}
         >
             <div className={cn(
-                "p-6 border-b border-stone-800/50 flex items-center gap-4 transition-all duration-300",
-                isCollapsed ? "justify-center px-2" : ""
+                "h-20 flex items-center gap-3 transition-all duration-300 border-b border-stone-800/50",
+                isCollapsed ? "justify-center px-4" : "px-6"
             )}>
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center border border-emerald-500/10 shadow-inner flex-shrink-0">
                     <UtensilsCrossed className="w-5 h-5 text-emerald-500" />
                 </div>
                 <div className={cn(
                     "flex-1 min-w-0 transition-all duration-300 ease-in-out",
-                    isCollapsed ? "opacity-0 w-0 translate-x-[-10px]" : "opacity-100 translate-x-0"
+                    isCollapsed ? "opacity-0 w-0 translate-x-[-10px] hidden" : "opacity-100 translate-x-0 block"
                 )}>
                     <h1 className="font-medium text-stone-200 text-sm leading-snug truncate">{settings.restaurantName || "Veg Mess"}</h1>
                     <p className="text-[10px] font-medium uppercase tracking-wider text-stone-500 mt-0.5">Admin Panel</p>
@@ -56,12 +56,12 @@ export default function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
             {/* Toggle Button */}
             <button
                 onClick={toggleSidebar}
-                className="absolute -right-3 top-20 bg-stone-800 text-stone-400 border border-stone-700 rounded-full p-1 hover:text-white hover:bg-stone-700 transition-colors shadow-sm z-50"
+                className="absolute -right-3 top-9 bg-stone-800 text-stone-400 border border-stone-700 rounded-full p-1 hover:text-white hover:bg-stone-700 transition-colors shadow-sm z-50"
             >
                 {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
             </button>
 
-            <nav className="flex-1 p-4 space-y-1 overflow-y-auto overflow-x-hidden">
+            <nav className="flex-1 p-4 space-y-2 overflow-y-auto overflow-x-hidden">
                 {NAV_ITEMS.map((item) => {
                     const isActive = location.pathname === item.path;
                     return (
@@ -70,11 +70,11 @@ export default function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
                             to={item.path}
                             title={isCollapsed ? item.label : ""}
                             className={cn(
-                                "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group text-sm font-medium relative",
+                                "flex items-center gap-3 p-3 rounded-xl transition-all duration-200 group text-sm font-medium relative",
                                 isActive
                                     ? "bg-emerald-500/10 text-emerald-400 shadow-sm border border-emerald-500/10"
                                     : "text-stone-400 hover:bg-stone-800/50 hover:text-stone-200",
-                                isCollapsed ? "justify-center px-0" : "mx-3"
+                                isCollapsed ? "justify-center" : "mx-0"
                             )}
                         >
                             <item.icon
@@ -85,7 +85,7 @@ export default function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
                             />
                             <span className={cn(
                                 "whitespace-nowrap transition-all duration-300 ease-in-out overflow-hidden",
-                                isCollapsed ? "max-w-0 opacity-0" : "max-w-[150px] opacity-100"
+                                isCollapsed ? "max-w-0 opacity-0 hidden" : "max-w-[150px] opacity-100 block"
                             )}>
                                 {item.label}
                             </span>
@@ -99,14 +99,14 @@ export default function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
                     onClick={handleLogout}
                     title={isCollapsed ? "Logout" : ""}
                     className={cn(
-                        "flex items-center gap-3 px-3 py-3 w-full rounded-xl text-stone-400 hover:bg-red-500/10 hover:text-red-400 transition-all duration-200 text-sm font-medium group",
+                        "flex items-center gap-3 p-3 w-full rounded-xl text-stone-400 hover:bg-red-500/10 hover:text-red-400 transition-all duration-200 text-sm font-medium group",
                         isCollapsed ? "justify-center" : ""
                     )}
                 >
                     <LogOut className="w-5 h-5 text-stone-500 group-hover:text-red-400 flex-shrink-0" />
                     <span className={cn(
                         "whitespace-nowrap transition-all duration-300 ease-in-out overflow-hidden",
-                        isCollapsed ? "max-w-0 opacity-0" : "max-w-[100px] opacity-100"
+                        isCollapsed ? "max-w-0 opacity-0 hidden" : "max-w-[100px] opacity-100 block"
                     )}>
                         Logout
                     </span>
