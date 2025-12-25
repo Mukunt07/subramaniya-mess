@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import type { Settings } from "./types";
 import { DEFAULT_SETTINGS } from "./types";
@@ -40,8 +40,12 @@ export function useSettings() {
             setSaving(true);
             setError(null);
             const docRef = doc(db, "settings", "config");
-            await setDoc(docRef, newSettings);
-            setSettings(newSettings);
+            const settingsWithTimestamp = {
+                ...newSettings,
+                updatedAt: serverTimestamp()
+            };
+            await setDoc(docRef, settingsWithTimestamp);
+            setSettings(newSettings); // Optimistic update, ignoring timestamp for UI
             return true;
         } catch (err) {
             console.error("Error saving settings:", err);

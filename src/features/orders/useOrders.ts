@@ -5,18 +5,22 @@ import {
     orderBy,
     onSnapshot,
     doc,
-    runTransaction
+    runTransaction,
+    serverTimestamp
 } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import type { Bill } from "../billing/types";
 import type { MenuItem } from "../menu/types";
 
+import { useActivityLogs } from "../activityLogs/useActivityLogs";
+
 export function useOrders() {
     const [orders, setOrders] = useState<Bill[]>([]);
     const [loading, setLoading] = useState(true);
+    const { logActivity } = useActivityLogs();
 
     useEffect(() => {
-        const q = query(collection(db, "orders"), orderBy("date", "desc"));
+        const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const data = snapshot.docs.map(doc => ({
                 id: doc.id,
@@ -49,13 +53,18 @@ export function useOrders() {
                         const newSold = Math.max(0, menuItem.soldQuantity - item.quantity);
                         transaction.update(itemRef, { soldQuantity: newSold });
                     }
-                    // Note: We don't necessarily enable it back automatically, or we could. 
-                    // Let's keep it simple: sold decreases, so remaining increases.
                 }
 
                 // Update Order Status
-                transaction.update(orderRef, { status: "Cancelled" });
+                transaction.update(orderRef, {
+                    status: "Cancelled",
+                    cancelledAt: serverTimestamp()
+                });
             });
+
+            // Log activity
+            logActivity("BILL_CANCELLED", orderId, "Order cancelled and stock reverted");
+
             return true;
         } catch (err) {
             console.error("Cancellation Error:", err);

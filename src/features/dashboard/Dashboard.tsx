@@ -1,4 +1,5 @@
 import { useDashboard } from "./useDashboard";
+import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import {
     BarChart,
     Bar,
@@ -25,7 +26,7 @@ const COLORS = ['#059669', '#10B981', '#34D399', '#6EE7B7', '#A7F3D0'];
 export default function Dashboard() {
     const { stats, loading, refresh } = useDashboard();
 
-    if (loading) return <div className="p-8">Loading dashboard...</div>;
+    if (loading) return <LoadingSpinner text="Preparing Dashboard..." />;
     if (!stats) return <div className="p-8">Failed to load data</div>;
 
     const cards = [
@@ -41,8 +42,8 @@ export default function Dashboard() {
         <div className="p-8 max-w-7xl mx-auto space-y-8">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-                    <p className="text-gray-500 mt-1">Overview for today</p>
+                    <h1 className="text-2xl font-semibold text-stone-800 tracking-tight">Dashboard</h1>
+                    <p className="text-stone-500 text-sm mt-1 font-medium">Overview for today</p>
                 </div>
                 <button
                     onClick={refresh}
@@ -60,8 +61,8 @@ export default function Dashboard() {
                             <card.icon className={cn("w-6 h-6", card.color)} />
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-gray-500">{card.label}</p>
-                            <h3 className="text-2xl font-bold text-gray-900">{card.value}</h3>
+                            <p className="text-sm font-medium text-stone-500 mb-1">{card.label}</p>
+                            <h3 className="text-2xl font-semibold text-stone-900 tracking-tight">{card.value}</h3>
                         </div>
                     </div>
                 ))}
@@ -69,8 +70,8 @@ export default function Dashboard() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Hourly Revenue Chart */}
-                <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                    <h3 className="text-lg font-bold text-gray-900 mb-6">Revenue by Hour</h3>
+                <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+                    <h3 className="text-lg font-semibold text-stone-800 mb-6 tracking-tight">Revenue by Hour</h3>
                     <div className="h-80">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={stats.revenueByHour.filter(d => d.amount > 0 || true)}> {/* Show all hours? Maybe simplistic */}
@@ -88,8 +89,8 @@ export default function Dashboard() {
                 </div>
 
                 {/* Payment Split */}
-                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                    <h3 className="text-lg font-bold text-gray-900 mb-6">Payment Mode Split</h3>
+                <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+                    <h3 className="text-lg font-semibold text-stone-800 mb-6 tracking-tight">Payment Mode Split</h3>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
@@ -122,15 +123,15 @@ export default function Dashboard() {
             </div>
 
             {/* Top Items Table (Category Sales replacement since we don't have cat in bill) */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-gray-100">
-                    <h3 className="text-lg font-bold text-gray-900">Top Selling Items</h3>
+            <div className="bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
+                <div className="p-6 border-b border-stone-100">
+                    <h3 className="text-lg font-semibold text-stone-800 tracking-tight">Top Selling Items</h3>
                 </div>
                 <table className="w-full text-left">
-                    <thead className="bg-gray-50 border-b border-gray-200">
+                    <thead className="bg-stone-50 border-b border-stone-200">
                         <tr>
-                            <th className="px-6 py-4 font-semibold text-gray-700 text-sm">Item Name</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700 text-sm text-right">Revenue</th>
+                            <th className="px-6 py-4 font-medium text-stone-600 text-sm">Item Name</th>
+                            <th className="px-6 py-4 font-medium text-stone-600 text-sm text-right">Revenue</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">

@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase/firestore";
+
 export interface Settings {
     restaurantName: string;
     gstPercentage: number;
@@ -5,6 +7,7 @@ export interface Settings {
     lowStockThreshold: number;
     billPrefix: string;
     autoDisableStock: boolean;
+    updatedAt: Timestamp;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -12,6 +15,7 @@ export const DEFAULT_SETTINGS: Settings = {
     gstPercentage: 5,
     currency: "₹",
     lowStockThreshold: 10,
-    billPrefix: "BILL",
+    billPrefix: "VEG-",
     autoDisableStock: true,
+    updatedAt: Timestamp.now(),
 };

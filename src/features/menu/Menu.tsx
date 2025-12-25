@@ -1,4 +1,5 @@
 import { useState } from "react";
+import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import { useMenu } from "./useMenu";
 import { Plus, Search, Edit2, AlertCircle, CheckCircle2, XCircle } from "lucide-react";
 import type { MenuItem, MenuItemCategory, MenuItemInput } from "./types";
@@ -71,14 +72,14 @@ export default function MenuPage() {
         setEditingItem(null);
     };
 
-    if (loading) return <div className="p-8">Loading menu...</div>;
+    if (loading) return <LoadingSpinner text="Fetching Menu Items..." />;
 
     return (
         <div className="p-8 max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Menu & Stock</h1>
-                    <p className="text-gray-500 mt-1">Manage food items, prices, and daily stock</p>
+                    <h1 className="text-2xl font-semibold text-stone-800 tracking-tight">Menu & Stock</h1>
+                    <p className="text-stone-500 text-sm mt-1 font-medium">Manage food items, prices, and daily stock</p>
                 </div>
                 <button
                     onClick={openAddModal}
@@ -109,28 +110,28 @@ export default function MenuPage() {
                     const isOutOfStock = remaining <= 0;
 
                     return (
-                        <div key={item.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow group">
+                        <div key={item.id} className="bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow group">
                             <div className="p-5">
                                 <div className="flex justify-between items-start mb-2">
-                                    <span className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
+                                    <span className="inline-block px-2.5 py-1 rounded-full text-xs font-medium bg-stone-100 text-stone-600">
                                         {item.category}
                                     </span>
                                     <div className="flex gap-1">
                                         <button
                                             onClick={() => openEditModal(item)}
-                                            className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                            className="p-1.5 text-stone-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
                                         >
                                             <Edit2 className="w-4 h-4" />
                                         </button>
                                     </div>
                                 </div>
 
-                                <h3 className="font-bold text-gray-900 text-lg mb-1">{item.name}</h3>
-                                <div className="text-2xl font-bold text-emerald-600 mb-4">₹{item.price}</div>
+                                <h3 className="font-semibold text-stone-900 text-lg mb-1 tracking-tight">{item.name}</h3>
+                                <div className="text-2xl font-semibold text-emerald-600 mb-4">₹{item.price}</div>
 
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between text-sm">
-                                        <span className="text-gray-500">Stock Status</span>
+                                        <span className="text-stone-500 font-medium">Stock Status</span>
                                         <button
                                             onClick={() => toggleAvailability(item.id, item.available)}
                                             className={cn(
@@ -145,19 +146,19 @@ export default function MenuPage() {
                                         </button>
                                     </div>
 
-                                    <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                                    <div className="bg-stone-50 rounded-lg p-3 space-y-2">
                                         <div className="flex justify-between text-sm">
-                                            <span className="text-gray-500">Prepared</span>
-                                            <span className="font-medium text-gray-900">{item.preparedQuantity}</span>
+                                            <span className="text-stone-500">Prepared</span>
+                                            <span className="font-medium text-stone-900">{item.preparedQuantity}</span>
                                         </div>
                                         <div className="flex justify-between text-sm">
-                                            <span className="text-gray-500">Sold</span>
-                                            <span className="font-medium text-gray-900">{item.soldQuantity}</span>
+                                            <span className="text-stone-500">Sold</span>
+                                            <span className="font-medium text-stone-900">{item.soldQuantity}</span>
                                         </div>
-                                        <div className="pt-2 border-t border-gray-200 flex justify-between items-center">
-                                            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Remaining</span>
+                                        <div className="pt-2 border-t border-stone-200 flex justify-between items-center">
+                                            <span className="text-xs font-medium text-stone-500 uppercase tracking-wide">Remaining</span>
                                             <span className={cn(
-                                                "font-bold",
+                                                "font-semibold",
                                                 isOutOfStock ? "text-red-600" : isLowStock ? "text-orange-600" : "text-emerald-600"
                                             )}>
                                                 {remaining}
@@ -195,15 +196,15 @@ export default function MenuPage() {
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                            <h2 className="text-xl font-bold text-gray-900">
+                        <div className="p-6 border-b border-stone-100 flex justify-between items-center bg-stone-50">
+                            <h2 className="text-xl font-semibold text-stone-900 tracking-tight">
                                 {editingItem ? "Edit Item" : "New Menu Item"}
                             </h2>
                             <button
                                 onClick={closeModal}
-                                className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                                className="p-2 hover:bg-stone-200 rounded-full transition-colors"
                             >
-                                <XCircle className="w-6 h-6 text-gray-400" />
+                                <XCircle className="w-6 h-6 text-stone-400" />
                             </button>
                         </div>
 

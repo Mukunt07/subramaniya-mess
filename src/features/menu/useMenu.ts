@@ -44,7 +44,9 @@ export function useMenu() {
                 ...input,
                 soldQuantity: 0,
                 available: true,
+                preparedDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD
                 createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
             });
             return true;
         } catch (err) {

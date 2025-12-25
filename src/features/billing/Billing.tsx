@@ -1,8 +1,9 @@
 import { useState, useMemo } from "react";
+import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import { useMenu } from "../menu/useMenu";
 import { useBilling } from "./useBilling";
 import { useSettings } from "../settings/useSettings";
-import { Search, ShoppingCart, Trash2, CreditCard, Banknote, Smartphone, Receipt, ShoppingBag } from "lucide-react";
+import { Search, Trash2, CreditCard, Banknote, Smartphone, ShoppingBag } from "lucide-react";
 import type { MenuItem } from "../menu/types";
 import type { BillItem, PaymentMode } from "./types";
 import { cn } from "../../lib/utils";
@@ -11,6 +12,8 @@ export default function BillingPage() {
     const { items: menuItems } = useMenu(); // Assume real-time
     const { createBill, loading } = useBilling();
     const { settings } = useSettings();
+
+    if (loading) return <LoadingSpinner text="Processing..." />;
 
     const [searchTerm, setSearchTerm] = useState("");
     const [cart, setCart] = useState<BillItem[]>([]);
@@ -100,15 +103,15 @@ export default function BillingPage() {
             {/* Left: Menu Selection */}
             <div className="flex-1 p-6 overflow-y-auto bg-gray-50">
                 <div className="mb-6">
-                    <h1 className="text-2xl font-bold text-gray-900 mb-4">New Order</h1>
+                    <h1 className="text-2xl font-semibold text-stone-800 mb-4 tracking-tight">New Order</h1>
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
                         <input
                             type="text"
                             placeholder="Search available items..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none bg-white shadow-sm"
+                            className="w-full pl-10 pr-4 py-3 rounded-xl border border-stone-200 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none bg-white shadow-sm transition-all"
                             autoFocus
                         />
                     </div>
@@ -121,32 +124,32 @@ export default function BillingPage() {
                             <button
                                 key={item.id}
                                 onClick={() => addToCart(item)}
-                                className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-emerald-500 hover:ring-1 hover:ring-emerald-500 transition-all text-left group"
+                                className="bg-white p-4 rounded-xl border border-stone-200 shadow-sm hover:shadow-md hover:border-emerald-500 hover:ring-1 hover:ring-emerald-500 transition-all text-left group"
                             >
                                 <div className="flex justify-between items-start mb-2">
-                                    <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                                    <span className="text-xs font-medium text-stone-500 bg-stone-100 px-2 py-0.5 rounded-full">
                                         {item.category}
                                     </span>
-                                    <span className={cn("text-xs font-bold", remaining < 5 ? "text-orange-600" : "text-emerald-600")}>
+                                    <span className={cn("text-xs font-semibold", remaining < 5 ? "text-orange-600" : "text-emerald-600")}>
                                         {remaining} left
                                     </span>
                                 </div>
-                                <h3 className="font-bold text-gray-900 line-clamp-1 group-hover:text-emerald-700">{item.name}</h3>
-                                <p className="text-gray-500 font-medium mt-1">₹{item.price}</p>
+                                <h3 className="font-semibold text-stone-900 line-clamp-1 group-hover:text-emerald-700 tracking-tight">{item.name}</h3>
+                                <p className="text-stone-500 font-medium mt-1">₹{item.price}</p>
                             </button>
                         );
                     })}
                 </div>
                 {filteredMenu.length === 0 && (
-                    <div className="text-center py-10 text-gray-400">No available items found</div>
+                    <div className="text-center py-10 text-stone-400">No available items found</div>
                 )}
             </div>
 
             {/* Right: Cart & Checkout */}
-            <div className="w-96 bg-white border-l border-gray-200 flex flex-col h-full shadow-xl">
-                <div className="p-5 border-b border-gray-100 bg-gray-50">
-                    <h2 className="font-bold text-gray-900 flex items-center gap-2">
-                        <ShoppingCart className="w-5 h-5 text-emerald-600" />
+            <div className="w-96 bg-white border-l border-stone-200 flex flex-col h-full shadow-xl">
+                <div className="p-5 border-b border-stone-100 bg-stone-50">
+                    <h2 className="font-semibold text-stone-900 flex items-center gap-2">
+                        <ShoppingBag className="w-5 h-5 text-emerald-600" />
                         Current Bill
                     </h2>
                 </div>
@@ -154,26 +157,25 @@ export default function BillingPage() {
                 {/* Cart Items */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
                     {cart.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center text-gray-400 space-y-2">
-                            <ShoppingBag className="w-12 h-12 opacity-20" /> {/* ShoppingBag is not imported, using Receipt or just text */}
-                            <Receipt className="w-12 h-12 opacity-20" />
+                        <div className="h-full flex flex-col items-center justify-center text-stone-400 space-y-2">
+                            <ShoppingBag className="w-12 h-12 opacity-20" />
                             <p>Cart is empty</p>
                         </div>
                     ) : (
                         cart.map(item => (
-                            <div key={item.itemId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                            <div key={item.itemId} className="flex items-center justify-between p-3 bg-stone-50 rounded-lg border border-stone-100">
                                 <div className="flex-1">
-                                    <h4 className="font-medium text-gray-900 text-sm">{item.name}</h4>
-                                    <div className="text-xs text-gray-500">₹{item.price} x {item.quantity}</div>
+                                    <h4 className="font-medium text-stone-900 text-sm">{item.name}</h4>
+                                    <div className="text-xs text-stone-500">₹{item.price} x {item.quantity}</div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <div className="flex items-center gap-1 bg-white rounded border border-gray-200">
-                                        <button onClick={() => updateQuantity(item.itemId, -1)} className="px-2 py-0.5 hover:bg-gray-100">-</button>
+                                    <div className="flex items-center gap-1 bg-white rounded border border-stone-200">
+                                        <button onClick={() => updateQuantity(item.itemId, -1)} className="px-2 py-0.5 hover:bg-stone-100">-</button>
                                         <span className="text-sm font-medium w-4 text-center">{item.quantity}</span>
-                                        <button onClick={() => updateQuantity(item.itemId, 1)} className="px-2 py-0.5 hover:bg-gray-100">+</button>
+                                        <button onClick={() => updateQuantity(item.itemId, 1)} className="px-2 py-0.5 hover:bg-stone-100">+</button>
                                     </div>
-                                    <div className="text-sm font-bold w-12 text-right">₹{item.total}</div>
-                                    <button onClick={() => removeFromCart(item.itemId)} className="text-gray-400 hover:text-red-500">
+                                    <div className="text-sm font-semibold w-12 text-right text-stone-900">₹{item.total}</div>
+                                    <button onClick={() => removeFromCart(item.itemId)} className="text-stone-400 hover:text-red-500">
                                         <Trash2 className="w-4 h-4" />
                                     </button>
                                 </div>
@@ -183,19 +185,19 @@ export default function BillingPage() {
                 </div>
 
                 {/* Checkout Section */}
-                <div className="p-5 border-t border-gray-200 bg-gray-50">
+                <div className="p-5 border-t border-stone-200 bg-stone-50">
                     <div className="space-y-2 mb-4">
-                        <div className="flex justify-between text-sm text-gray-600">
+                        <div className="flex justify-between text-sm text-stone-600">
                             <span>Subtotal</span>
                             <span>₹{subtotal}</span>
                         </div>
                         {gstEnabled && (
-                            <div className="flex justify-between text-sm text-gray-600">
+                            <div className="flex justify-between text-sm text-stone-600">
                                 <span>GST ({settings.gstPercentage}%)</span>
                                 <span>₹{gstAmount.toFixed(2)}</span>
                             </div>
                         )}
-                        <div className="flex justify-between text-xl font-bold text-gray-900 pt-2 border-t border-gray-200">
+                        <div className="flex justify-between text-xl font-semibold text-stone-900 pt-2 border-t border-stone-200">
                             <span>Total</span>
                             <span>₹{totalAmount}</span>
                         </div>

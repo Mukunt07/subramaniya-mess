@@ -18,7 +18,9 @@ export interface MenuItem {
     available: boolean;
     preparedQuantity: number;
     soldQuantity: number;
+    preparedDate: string; // YYYY-MM-DD
     createdAt: Timestamp;
+    updatedAt: Timestamp;
 }
 
 export interface MenuItemInput {
@@ -26,5 +28,8 @@ export interface MenuItemInput {
     category: MenuItemCategory;
     price: number;
     preparedQuantity: number;
-    // available is auto-derived or manual toggle
+    // soldQuantity derived (0 initially)
+    // available derived (prepared > 0)
+    // preparedDate derived (today)
+    // timestamps derived
 }

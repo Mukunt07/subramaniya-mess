@@ -1,11 +1,20 @@
+import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
+import { cn } from "../../lib/utils";
 
 export default function Layout() {
+    const [isCollapsed, setIsCollapsed] = useState(false);
+
     return (
-        <div className="min-h-screen bg-gray-50 flex">
-            <Sidebar />
-            <main className="flex-1 ml-64 min-h-screen">
+        <div className="min-h-screen bg-stone-50 flex">
+            <Sidebar isCollapsed={isCollapsed} toggleSidebar={() => setIsCollapsed(!isCollapsed)} />
+            <main
+                className={cn(
+                    "flex-1 min-h-screen transition-all duration-300 ease-in-out",
+                    isCollapsed ? "ml-20" : "ml-64"
+                )}
+            >
                 <Outlet />
             </main>
         </div>

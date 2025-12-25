@@ -10,9 +10,12 @@ import { useSettings } from "../settings/useSettings"; // To get bill prefix/set
 import type { Bill, BillItem, PaymentMode } from "./types";
 import type { MenuItem } from "../menu/types";
 
+import { useActivityLogs } from "../activityLogs/useActivityLogs";
+
 export function useBilling() {
     const [loading, setLoading] = useState(false);
     const { settings } = useSettings();
+    const { logActivity } = useActivityLogs();
 
     const createBill = async (
         items: BillItem[],
@@ -21,13 +24,16 @@ export function useBilling() {
     ) => {
         setLoading(true);
         try {
+            // ... existing validation ...
             if (items.length === 0) throw new Error("No items in bill");
 
             const subtotal = items.reduce((sum, item) => sum + item.total, 0);
             const gstAmount = gstEnabled ? (subtotal * settings.gstPercentage) / 100 : 0;
             const totalAmount = Math.round(subtotal + gstAmount);
+            let newBillId = "";
 
             await runTransaction(db, async (transaction) => {
+                // ... existing logic ...
                 // 1. Check Stock
                 for (const item of items) {
                     const itemRef = doc(db, "menuItems", item.itemId);
@@ -56,10 +62,6 @@ export function useBilling() {
                 }
 
                 // 3. Generate Bill Number
-                // Primitive generation: Count existing bills or use Timestamp?
-                // Better: Store a counter in settings or dedicated counter doc.
-                // For simplicity in this scope: Use Timestamp-Random or just simple read-increment on a counter doc.
-                // Let's use a "counters/bills" doc.
                 const counterRef = doc(db, "settings", "counters");
                 const counterDoc = await transaction.get(counterRef);
                 let seq = 1;
@@ -74,19 +76,26 @@ export function useBilling() {
 
                 // 4. Create Bill
                 const newBillRef = doc(collection(db, "orders"));
+                newBillId = newBillRef.id;
                 const newBill: Bill = {
-                    // id will be doc id
                     billNumber,
                     items,
                     subtotal,
+                    gstEnabled,
                     gstAmount,
                     totalAmount,
                     paymentMode,
-                    date: serverTimestamp() as any, // Client side view might fail if we don't cast, but Firestore handles it
-                    status: "Completed"
+                    status: "Completed",
+                    createdAt: serverTimestamp() as any,
+                    cancelledAt: null,
                 };
                 transaction.set(newBillRef, newBill);
             });
+
+            // Log activity outside transaction (best effort)
+            if (newBillId) {
+                logActivity("BILL_CREATED", newBillId, `Bill created with ${items.length} items. Total: ${totalAmount}`);
+            }
 
             return { success: true };
         } catch (err: any) {

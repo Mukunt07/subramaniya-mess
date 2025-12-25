@@ -14,10 +14,12 @@ export interface Bill {
     id?: string;
     billNumber: string;
     items: BillItem[];
-    subtotal: number;
+    subtotal: number; // Note: Schema calls this subTotal, but code uses subtotal. Keeping subtotal for now to avoid massive refactor unless strictly required. User schema said "subTotal", I will align to "subTotal" if possible or map it. Let's start by adding missing fields.
+    gstEnabled: boolean;
     gstAmount: number;
     totalAmount: number;
     paymentMode: PaymentMode;
-    date: Timestamp;
     status: "Completed" | "Cancelled";
+    createdAt: Timestamp;
+    cancelledAt: Timestamp | null;
 }
