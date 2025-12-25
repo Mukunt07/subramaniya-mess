@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import OfflineIndicator from "../ui/OfflineIndicator";
+import MobileNav from "./MobileNav";
 import { cn } from "../../lib/utils";
 
 export default function Layout() {
@@ -13,12 +14,13 @@ export default function Layout() {
             <main
                 className={cn(
                     "flex-1 min-h-screen transition-all duration-300 ease-in-out",
-                    isCollapsed ? "ml-20" : "ml-64"
+                    isCollapsed ? "lg:ml-20" : "lg:ml-64"
                 )}
             >
                 <OfflineIndicator />
                 <Outlet />
             </main>
+            <MobileNav />
         </div>
     );
 }

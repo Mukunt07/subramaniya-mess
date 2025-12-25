@@ -20,7 +20,8 @@ export function useBilling() {
     const createBill = async (
         items: BillItem[],
         paymentMode: PaymentMode,
-        gstEnabled: boolean
+        gstEnabled: boolean,
+        orderType: "Dine-in" | "Parcel"
     ) => {
         setLoading(true);
         try {
@@ -104,6 +105,7 @@ export function useBilling() {
                     gstAmount,
                     totalAmount,
                     paymentMode,
+                    orderType,
                     status: "Paid",
                     createdAt: serverTimestamp() as any,
                     cancelledAt: null,

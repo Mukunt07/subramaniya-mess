@@ -8,6 +8,7 @@ interface ReceiptTemplateProps {
     gstAmount: number;
     totalAmount: number;
     settings: Settings;
+    orderType?: "Dine-in" | "Parcel";
     sample?: boolean; // If true, show sample data for preview
 }
 
@@ -17,6 +18,7 @@ export default function ReceiptTemplate({
     gstAmount,
     totalAmount,
     settings,
+    orderType = "Dine-in",
     sample = false
 }: ReceiptTemplateProps) {
     const displayItems = sample && items.length === 0 ? [
@@ -32,21 +34,24 @@ export default function ReceiptTemplate({
         <div className="bg-white font-mono text-sm leading-relaxed text-stone-900 w-full">
             {/* Header */}
             <div className="text-center mb-6">
-                <h2 className="text-xl font-bold uppercase tracking-wider mb-1">{settings.restaurantName}</h2>
+                <h2 className="text-xl font-medium uppercase tracking-wider mb-1">{settings.restaurantName}</h2>
                 <p className="text-xs text-stone-500 whitespace-pre-wrap">{settings.address || "Address Line 1, City"}</p>
                 <p className="text-xs text-stone-500">Tel: {settings.phone || "+91 XXXXX XXXXX"}</p>
             </div>
 
             {/* Meta */}
             <div className="mb-4 text-xs flex justify-between uppercase">
-                <span>Date: {format(new Date(), "dd-MM-yyyy")}</span>
-                <span>Time: {format(new Date(), "HH:mm")}</span>
+                <span>{orderType}</span>
+                <div className="text-right">
+                    <div>Date: {format(new Date(), "dd-MM-yyyy")}</div>
+                    <div>Time: {format(new Date(), "HH:mm")}</div>
+                </div>
             </div>
 
             <div className="border-b border-dashed border-stone-300 mb-4" />
 
             {/* Items Header */}
-            <div className="grid grid-cols-12 gap-2 mb-2 text-xs font-bold uppercase">
+            <div className="grid grid-cols-12 gap-2 mb-2 text-xs uppercase text-stone-600">
                 <div className="col-span-1">Q</div>
                 <div className="col-span-7">Item</div>
                 <div className="col-span-4 text-right">Price</div>
@@ -56,7 +61,7 @@ export default function ReceiptTemplate({
             <div className="space-y-2 mb-4 min-h-[50px]">
                 {displayItems.map((item, idx) => (
                     <div key={idx} className="grid grid-cols-12 gap-2 text-xs">
-                        <div className="col-span-1 font-bold">{item.quantity}</div>
+                        <div className="col-span-1">{item.quantity}</div>
                         <div className="col-span-7 uppercase truncate">{item.name}</div>
                         <div className="col-span-4 text-right">
                             {(item.price * item.quantity).toFixed(2)}
@@ -79,7 +84,7 @@ export default function ReceiptTemplate({
                         <span>{displayGst.toFixed(2)}</span>
                     </div>
                 )}
-                <div className="flex justify-between font-bold text-lg mt-2 border-t border-dashed border-stone-300 pt-2">
+                <div className="flex justify-between text-lg mt-2 border-t border-dashed border-stone-300 pt-2 font-medium">
                     <span>TOTAL</span>
                     <span>₹{displayTotal.toFixed(2)}</span>
                 </div>

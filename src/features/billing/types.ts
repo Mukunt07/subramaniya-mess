@@ -19,6 +19,7 @@ export interface Bill {
     gstAmount: number;
     totalAmount: number;
     paymentMode: PaymentMode;
+    orderType: "Dine-in" | "Parcel";
     status: "Paid" | "Cancelled";
     createdAt: Timestamp;
     cancelledAt: Timestamp | null;

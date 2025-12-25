@@ -2,7 +2,7 @@ import { useState } from "react";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import { useOrders } from "./useOrders";
 import { format } from "date-fns";
-import { Search, FileX } from "lucide-react";
+import { Search, FileX, Utensils, Package } from "lucide-react";
 import { cn } from "../../lib/utils";
 import type { PaymentMode } from "../billing/types";
 
@@ -82,6 +82,7 @@ export default function OrdersPage() {
                         <thead className="bg-stone-50 border-b border-stone-200">
                             <tr>
                                 <th className="px-6 py-4 font-medium text-stone-600 text-sm">Bill No</th>
+                                <th className="px-6 py-4 font-medium text-stone-600 text-sm">Type</th>
                                 <th className="px-6 py-4 font-medium text-stone-600 text-sm">Date & Time</th>
                                 <th className="px-6 py-4 font-medium text-stone-600 text-sm">Items</th>
                                 <th className="px-6 py-4 font-medium text-stone-600 text-sm">Total</th>
@@ -94,6 +95,19 @@ export default function OrdersPage() {
                             {filteredOrders.map((order) => (
                                 <tr key={order.id} className="hover:bg-stone-50/50 transition-colors">
                                     <td className="px-6 py-4 font-medium text-stone-900">{order.billNumber}</td>
+                                    <td className="px-6 py-4">
+                                        {order.orderType === "Parcel" ? (
+                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 text-orange-700 text-xs font-medium border border-orange-100">
+                                                <Package className="w-3.5 h-3.5" />
+                                                Parcel
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">
+                                                <Utensils className="w-3.5 h-3.5" />
+                                                Dine-in
+                                            </span>
+                                        )}
+                                    </td>
                                     <td className="px-6 py-4 text-sm text-stone-500">
                                         {order.createdAt ? format(order.createdAt.toDate(), "dd MMM, hh:mm a") : "-"}
                                     </td>
@@ -131,7 +145,7 @@ export default function OrdersPage() {
                             ))}
                             {filteredOrders.length === 0 && (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-stone-500">
+                                    <td colSpan={8} className="px-6 py-12 text-center text-stone-500">
                                         No orders found matching your filters
                                     </td>
                                 </tr>

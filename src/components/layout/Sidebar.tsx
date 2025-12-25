@@ -33,7 +33,7 @@ export default function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
     return (
         <aside
             className={cn(
-                "bg-stone-900 border-r border-stone-800 flex flex-col h-screen fixed left-0 top-0 z-50 transition-all duration-300 ease-in-out",
+                "bg-stone-900 border-r border-stone-800 hidden lg:flex flex-col h-screen fixed left-0 top-0 z-50 transition-all duration-300 ease-in-out",
                 isCollapsed ? "w-20" : "w-64"
             )}
         >

@@ -17,6 +17,10 @@ export interface DashboardStats {
     revenueByHour: { hour: string; amount: number }[];
     categorySales: { name: string; value: number }[];
     lowStockCount: number;
+    diningSales: number;
+    diningCount: number;
+    parcelSales: number;
+    parcelCount: number;
 }
 
 export function useDashboard() {
@@ -36,7 +40,6 @@ export function useDashboard() {
         );
 
         // 2. Menu Items Listener (for Low Stock)
-        // We listen to all items to count low stock.
         const itemsQuery = query(collection(db, "menuItems"));
 
         let ordersData: Bill[] = [];
@@ -53,9 +56,24 @@ export function useDashboard() {
             const avgBillValue = totalBills > 0 ? Math.round(totalRevenue / totalBills) : 0;
 
             const paymentSplit = { Cash: 0, UPI: 0, Card: 0 };
+            let diningSales = 0;
+            let diningCount = 0;
+            let parcelSales = 0;
+            let parcelCount = 0;
+
             completedOrders.forEach(o => {
+                // Payment Split
                 if (paymentSplit[o.paymentMode] !== undefined) {
                     paymentSplit[o.paymentMode] += o.totalAmount;
+                }
+
+                // Order Type Split
+                if (o.orderType === "Parcel") {
+                    parcelSales += o.totalAmount;
+                    parcelCount++;
+                } else {
+                    diningSales += o.totalAmount;
+                    diningCount++;
                 }
             });
 
@@ -91,7 +109,11 @@ export function useDashboard() {
                 paymentSplit,
                 revenueByHour,
                 categorySales,
-                lowStockCount
+                lowStockCount,
+                diningSales,
+                diningCount,
+                parcelSales,
+                parcelCount
             });
             setLoading(false);
         };

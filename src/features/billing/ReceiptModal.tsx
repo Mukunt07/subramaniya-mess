@@ -12,6 +12,7 @@ interface ReceiptModalProps {
     onConfirm: () => void;
     onClose: () => void;
     loading: boolean;
+    orderType: "Dine-in" | "Parcel";
 }
 
 export default function ReceiptModal({
@@ -21,7 +22,8 @@ export default function ReceiptModal({
     totalAmount,
     onConfirm,
     onClose,
-    loading
+    loading,
+    orderType
 }: ReceiptModalProps) {
     const { settings } = useSettings();
 
@@ -31,7 +33,7 @@ export default function ReceiptModal({
 
                 {/* Header Actions */}
                 <div className="flex justify-between items-center p-3 bg-stone-100 border-b border-stone-200">
-                    <span className="text-xs font-semibold text-stone-500 uppercase tracking-widest">Bill Preview</span>
+                    <span className="text-xs font-medium text-stone-500 uppercase tracking-widest">Bill Preview</span>
                     <div className="flex items-center gap-1">
                         <button
                             onClick={() => window.print()}
@@ -54,13 +56,14 @@ export default function ReceiptModal({
                         gstAmount={gstAmount}
                         totalAmount={totalAmount}
                         settings={settings}
+                        orderType={orderType}
                     />
                 </div>
 
                 {/* Actions Footer */}
                 <div className="p-4 bg-stone-50 border-t border-stone-200 flex gap-3">
                     <button
-                        className="flex-1 py-3 bg-white text-stone-700 font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-stone-100 hover:text-red-600 border border-stone-200 transition-colors uppercase text-xs tracking-wider"
+                        className="flex-1 py-3 bg-white text-stone-700 font-medium rounded-xl flex items-center justify-center gap-2 hover:bg-stone-100 hover:text-red-600 border border-stone-200 transition-colors uppercase text-xs tracking-wider"
                         onClick={onClose}
                     >
                         Cancel
@@ -69,7 +72,7 @@ export default function ReceiptModal({
                         onClick={onConfirm}
                         disabled={loading}
                         className={cn(
-                            "flex-[2] py-3 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg uppercase text-sm tracking-wide",
+                            "flex-[2] py-3 text-white font-medium rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg uppercase text-sm tracking-wide",
                             loading ? "bg-emerald-400 cursor-not-allowed" : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/30"
                         )}
                     >
