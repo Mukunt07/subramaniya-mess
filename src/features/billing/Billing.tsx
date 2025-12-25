@@ -8,6 +8,7 @@ import type { MenuItem, MenuItemCategory } from "../menu/types";
 import { MENU_CATEGORIES } from "../menu/types";
 import type { BillItem, PaymentMode } from "./types";
 import { cn } from "../../lib/utils";
+import ReceiptModal from "./ReceiptModal";
 
 export default function BillingPage() {
     const { items: menuItems } = useMenu(); // Assume real-time
@@ -22,6 +23,7 @@ export default function BillingPage() {
     const [gstEnabled, setGstEnabled] = useState(true);
     const [successMsg, setSuccessMsg] = useState("");
     const [errorMsg, setErrorMsg] = useState("");
+    const [showReceipt, setShowReceipt] = useState(false);
 
     // Derived
     const filteredMenu = useMemo(() => {
@@ -105,18 +107,23 @@ export default function BillingPage() {
         });
     };
 
-    const handleCheckout = async () => {
+    const handleInitialPayClick = () => {
         setErrorMsg("");
         setSuccessMsg("");
         if (cart.length === 0) return;
+        setShowReceipt(true);
+    };
 
+    const handleConfirmPay = async () => {
         const result = await createBill(cart, paymentMode, gstEnabled);
         if (result.success) {
             setSuccessMsg("Order placed successfully!");
             setCart([]);
+            setShowReceipt(false);
             setTimeout(() => setSuccessMsg(""), 3000);
         } else {
             setErrorMsg(result.error || "Failed to place order");
+            setShowReceipt(false);
         }
     };
 
@@ -309,7 +316,7 @@ export default function BillingPage() {
                         {successMsg && <div className="text-emerald-600 text-sm text-center bg-green-50 p-2 rounded">{successMsg}</div>}
 
                         <button
-                            onClick={handleCheckout}
+                            onClick={handleInitialPayClick}
                             disabled={loading || cart.length === 0}
                             className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-emerald-500/30 disabled:opacity-50 disabled:shadow-none transition-all"
                         >
@@ -318,6 +325,17 @@ export default function BillingPage() {
                     </div>
                 </div>
             </div>
+            {showReceipt && (
+                <ReceiptModal
+                    items={cart}
+                    subtotal={subtotal}
+                    gstAmount={gstAmount}
+                    totalAmount={totalAmount}
+                    loading={loading}
+                    onConfirm={handleConfirmPay}
+                    onClose={() => setShowReceipt(false)}
+                />
+            )}
         </div>
     );
 }
