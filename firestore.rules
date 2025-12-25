@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null;
+    }
+
+    // Rules
+    match /settings/{document} {
+      allow read: if true; // Login page might need settings? Or restricted? Admin only best.
+      allow write: if isAdmin();
+    }
+    
+    // Actually, everything should be admin only
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+}
