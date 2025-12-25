@@ -196,7 +196,7 @@ export default function Dashboard() {
                         </div>
                     </div>
                     <div className="flex justify-center gap-4 mt-8 flex-wrap">
-                        {paymentData.map((entry, index) => (
+                        {paymentData.map((entry) => (
                             <div key={entry.name} className="flex items-center gap-2 text-sm text-gray-500 font-medium">
                                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: PAYMENT_COLORS[entry.name] || '#ccc' }} />
                                 {entry.name}
