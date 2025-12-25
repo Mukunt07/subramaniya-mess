@@ -104,7 +104,7 @@ export function useBilling() {
                     gstAmount,
                     totalAmount,
                     paymentMode,
-                    status: "Completed",
+                    status: "Paid",
                     createdAt: serverTimestamp() as any,
                     cancelledAt: null,
                 };

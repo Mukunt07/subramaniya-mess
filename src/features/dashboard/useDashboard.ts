@@ -47,7 +47,7 @@ export function useDashboard() {
         const processStats = () => {
             if (!initialLoadOrders || !initialLoadItems) return;
 
-            const completedOrders = ordersData.filter(o => o.status === "Completed");
+            const completedOrders = ordersData.filter(o => o.status === "Paid");
             const totalRevenue = completedOrders.reduce((sum, o) => sum + o.totalAmount, 0);
             const totalBills = completedOrders.length;
             const avgBillValue = totalBills > 0 ? Math.round(totalRevenue / totalBills) : 0;

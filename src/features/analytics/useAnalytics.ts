@@ -27,12 +27,12 @@ export function useAnalytics() {
 
             const ordersQuery = query(
                 collection(db, "orders"),
-                where("date", ">=", Timestamp.fromDate(start)),
-                where("date", "<=", Timestamp.fromDate(end))
+                where("createdAt", ">=", Timestamp.fromDate(start)),
+                where("createdAt", "<=", Timestamp.fromDate(end))
             );
 
             const ordersSnap = await getDocs(ordersQuery);
-            const orders = ordersSnap.docs.map(d => ({ ...d.data(), date: d.data().date.toDate() })) as (Bill & { date: Date })[];
+            const orders = ordersSnap.docs.map(d => ({ ...d.data(), date: d.data().createdAt.toDate() })) as (Bill & { date: Date })[];
 
             // Group by Date
             const revenueMap = new Map<string, number>();
@@ -43,7 +43,7 @@ export function useAnalytics() {
             }
 
             orders.forEach(o => {
-                if (o.status === "Completed") {
+                if (o.status === "Paid") {
                     const dateKey = format(o.date, "yyyy-MM-dd");
                     if (revenueMap.has(dateKey)) {
                         revenueMap.set(dateKey, (revenueMap.get(dateKey) || 0) + o.totalAmount);

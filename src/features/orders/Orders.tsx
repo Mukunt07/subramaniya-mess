@@ -9,7 +9,7 @@ import type { PaymentMode } from "../billing/types";
 export default function OrdersPage() {
     const { orders, loading, cancelOrder } = useOrders();
     const [searchTerm, setSearchTerm] = useState("");
-    const [statusFilter, setStatusFilter] = useState<"All" | "Completed" | "Cancelled">("All");
+    const [statusFilter, setStatusFilter] = useState<"All" | "Paid" | "Cancelled">("All");
     const [paymentFilter, setPaymentFilter] = useState<"All" | PaymentMode>("All");
 
     const filteredOrders = orders.filter(order => {
@@ -58,7 +58,7 @@ export default function OrdersPage() {
                         className="px-3 py-2.5 rounded-lg border border-gray-200 text-sm font-medium bg-gray-50 outline-none focus:border-emerald-500"
                     >
                         <option value="All">All Status</option>
-                        <option value="Completed">Completed</option>
+                        <option value="Paid">Paid</option>
                         <option value="Cancelled">Cancelled</option>
                     </select>
 
@@ -95,7 +95,7 @@ export default function OrdersPage() {
                                 <tr key={order.id} className="hover:bg-stone-50/50 transition-colors">
                                     <td className="px-6 py-4 font-medium text-stone-900">{order.billNumber}</td>
                                     <td className="px-6 py-4 text-sm text-stone-500">
-                                        {order.date ? format(order.date.toDate(), "dd MMM, hh:mm a") : "-"}
+                                        {order.createdAt ? format(order.createdAt.toDate(), "dd MMM, hh:mm a") : "-"}
                                     </td>
                                     <td className="px-6 py-4 text-sm text-stone-600 max-w-xs truncate">
                                         {order.items.map(i => `${i.quantity}x ${i.name}`).join(", ")}
@@ -109,7 +109,7 @@ export default function OrdersPage() {
                                     <td className="px-6 py-4">
                                         <span className={cn(
                                             "px-2.5 py-1 rounded-full text-xs font-medium border",
-                                            order.status === "Completed"
+                                            order.status === "Paid"
                                                 ? "bg-emerald-50 text-emerald-700 border-emerald-100"
                                                 : "bg-red-50 text-red-700 border-red-100"
                                         )}>
@@ -117,7 +117,7 @@ export default function OrdersPage() {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        {order.status === "Completed" && (
+                                        {order.status === "Paid" && (
                                             <button
                                                 onClick={() => handleCancel(order.id!)}
                                                 className="text-stone-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-lg transition-colors"

@@ -19,7 +19,7 @@ export interface Bill {
     gstAmount: number;
     totalAmount: number;
     paymentMode: PaymentMode;
-    status: "Completed" | "Cancelled";
+    status: "Paid" | "Cancelled";
     createdAt: Timestamp;
     cancelledAt: Timestamp | null;
 }
