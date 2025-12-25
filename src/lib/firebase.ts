@@ -6,13 +6,13 @@ import { getFirestore, enableMultiTabIndexedDbPersistence } from "firebase/fires
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyCXGYqJwIIOgg-RxxhQa6ezz_ZeuA0PQrg",
-    authDomain: "subramaniya-mess.firebaseapp.com",
-    projectId: "subramaniya-mess",
-    storageBucket: "subramaniya-mess.firebasestorage.app",
-    messagingSenderId: "190800409214",
-    appId: "1:190800409214:web:1be6bbd14460464e4dde2f",
-    measurementId: "G-KLYFP4V0N0"
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
