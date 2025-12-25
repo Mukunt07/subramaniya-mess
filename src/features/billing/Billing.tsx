@@ -3,8 +3,9 @@ import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import { useMenu } from "../menu/useMenu";
 import { useBilling } from "./useBilling";
 import { useSettings } from "../settings/useSettings";
-import { Search, Trash2, CreditCard, Banknote, Smartphone, ShoppingBag } from "lucide-react";
-import type { MenuItem } from "../menu/types";
+import { Search, Trash2, CreditCard, Banknote, Smartphone, ShoppingBag, ArrowUpDown } from "lucide-react";
+import type { MenuItem, MenuItemCategory } from "../menu/types";
+import { MENU_CATEGORIES } from "../menu/types";
 import type { BillItem, PaymentMode } from "./types";
 import { cn } from "../../lib/utils";
 
@@ -13,9 +14,9 @@ export default function BillingPage() {
     const { createBill, loading } = useBilling();
     const { settings } = useSettings();
 
-    if (loading) return <LoadingSpinner text="Processing..." />;
-
     const [searchTerm, setSearchTerm] = useState("");
+    const [sortOption, setSortOption] = useState<"name-asc" | "name-desc" | "price-asc" | "price-desc">("name-asc");
+    const [activeTab, setActiveTab] = useState<"All" | MenuItemCategory>("All");
     const [cart, setCart] = useState<BillItem[]>([]);
     const [paymentMode, setPaymentMode] = useState<PaymentMode>("Cash");
     const [gstEnabled, setGstEnabled] = useState(true);
@@ -24,17 +25,38 @@ export default function BillingPage() {
 
     // Derived
     const filteredMenu = useMemo(() => {
-        return menuItems.filter(item =>
-            item.available && // Only show available
-            (item.preparedQuantity - item.soldQuantity > 0) && // Only show in stock
-            (item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                item.category.toLowerCase().includes(searchTerm.toLowerCase()))
-        );
-    }, [menuItems, searchTerm]);
+        return menuItems.filter(item => {
+            const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                item.category.toLowerCase().includes(searchTerm.toLowerCase());
+
+            // If searching, ignore tabs (VS Code style). Else obey tabs.
+            const matchesTab = searchTerm ? true : (activeTab === "All" || item.category === activeTab);
+
+            return item.available &&
+                (item.preparedQuantity - item.soldQuantity > 0) &&
+                matchesSearch &&
+                matchesTab;
+        }).sort((a, b) => {
+            switch (sortOption) {
+                case "name-asc":
+                    return a.name.localeCompare(b.name);
+                case "name-desc":
+                    return b.name.localeCompare(a.name);
+                case "price-asc":
+                    return a.price - b.price;
+                case "price-desc":
+                    return b.price - a.price;
+                default:
+                    return 0;
+            }
+        });
+    }, [menuItems, searchTerm, sortOption, activeTab]);
 
     const subtotal = cart.reduce((sum, item) => sum + item.total, 0);
     const gstAmount = gstEnabled ? (subtotal * settings.gstPercentage) / 100 : 0;
     const totalAmount = Math.round(subtotal + gstAmount);
+
+    if (loading) return <LoadingSpinner text="Processing..." />;
 
     // Handlers
     const addToCart = (item: MenuItem) => {
@@ -102,18 +124,52 @@ export default function BillingPage() {
         <div className="flex h-[calc(100vh-theme(spacing.16))] overflow-hidden">
             {/* Left: Menu Selection */}
             <div className="flex-1 p-6 overflow-y-auto bg-gray-50">
-                <div className="mb-6">
-                    <h1 className="text-2xl font-semibold text-stone-800 mb-4 tracking-tight">New Order</h1>
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
-                        <input
-                            type="text"
-                            placeholder="Search available items..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 rounded-xl border border-stone-200 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none bg-white shadow-sm transition-all"
-                            autoFocus
-                        />
+                <div className="mb-6 space-y-4">
+                    <h1 className="text-2xl font-semibold text-stone-800 tracking-tight">New Order</h1>
+
+                    {/* Tabs */}
+                    <div className="flex flex-wrap gap-2">
+                        {["All", ...MENU_CATEGORIES].map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab as any)}
+                                className={cn(
+                                    "px-4 py-2 rounded-full text-sm font-medium transition-all duration-200",
+                                    activeTab === tab
+                                        ? "bg-stone-900 text-white shadow-md shadow-stone-900/20"
+                                        : "bg-white text-stone-500 hover:bg-stone-100 border border-stone-200"
+                                )}
+                            >
+                                {tab}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="flex gap-4">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+                            <input
+                                type="text"
+                                placeholder="Search available items..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-4 py-3 rounded-xl border border-stone-200 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none bg-white shadow-sm transition-all"
+                                autoFocus
+                            />
+                        </div>
+                        <div className="relative w-48">
+                            <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <select
+                                value={sortOption}
+                                onChange={(e) => setSortOption(e.target.value as any)}
+                                className="w-full pl-10 pr-4 py-3 rounded-xl border border-stone-200 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all appearance-none bg-white cursor-pointer shadow-sm"
+                            >
+                                <option value="name-asc">Name (A-Z)</option>
+                                <option value="name-desc">Name (Z-A)</option>
+                                <option value="price-asc">Price (Low-High)</option>
+                                <option value="price-desc">Price (High-Low)</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -206,23 +262,36 @@ export default function BillingPage() {
                     <div className="space-y-4">
                         {/* Payment Mode */}
                         <div className="grid grid-cols-3 gap-2">
-                            {(["Cash", "UPI", "Card"] as const).map(mode => (
-                                <button
-                                    key={mode}
-                                    onClick={() => setPaymentMode(mode)}
-                                    className={cn(
-                                        "flex flex-col items-center justify-center p-2 rounded-lg border transition-all text-xs font-medium gap-1",
-                                        paymentMode === mode
-                                            ? "bg-emerald-600 text-white border-emerald-600 shadow-md transform scale-105"
-                                            : "bg-white text-gray-600 border-gray-200 hover:border-emerald-400"
-                                    )}
-                                >
-                                    {mode === "Cash" && <Banknote className="w-4 h-4" />}
-                                    {mode === "UPI" && <Smartphone className="w-4 h-4" />}
-                                    {mode === "Card" && <CreditCard className="w-4 h-4" />}
-                                    {mode}
-                                </button>
-                            ))}
+                            {(["Cash", "UPI", "Card"] as const).map(mode => {
+                                const colorMap = {
+                                    Cash: "bg-emerald-600 border-emerald-600 hover:bg-emerald-700",
+                                    UPI: "bg-blue-600 border-blue-600 hover:bg-blue-700",
+                                    Card: "bg-violet-600 border-violet-600 hover:bg-violet-700"
+                                };
+                                const hoverMap = {
+                                    Cash: "hover:border-emerald-400 text-emerald-600 bg-emerald-50",
+                                    UPI: "hover:border-blue-400 text-blue-600 bg-blue-50",
+                                    Card: "hover:border-violet-400 text-violet-600 bg-violet-50"
+                                };
+
+                                return (
+                                    <button
+                                        key={mode}
+                                        onClick={() => setPaymentMode(mode)}
+                                        className={cn(
+                                            "flex flex-col items-center justify-center p-3 rounded-xl border transition-all text-sm font-semibold gap-1.5 shadow-sm",
+                                            paymentMode === mode
+                                                ? `${colorMap[mode]} text-white shadow-md transform scale-105`
+                                                : `bg-white border-stone-200 text-stone-600 ${hoverMap[mode]}`
+                                        )}
+                                    >
+                                        {mode === "Cash" && <Banknote className="w-5 h-5" />}
+                                        {mode === "UPI" && <Smartphone className="w-5 h-5" />}
+                                        {mode === "Card" && <CreditCard className="w-5 h-5" />}
+                                        {mode}
+                                    </button>
+                                );
+                            })}
                         </div>
 
                         <div className="flex items-center gap-2">

@@ -22,7 +22,11 @@ import {
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 
-const COLORS = ['#10B981', '#34D399', '#6EE7B7', '#A7F3D0', '#D1FAE5'];
+const PAYMENT_COLORS: Record<string, string> = {
+    Cash: '#059669', // emerald-600
+    UPI: '#2563EB',  // blue-600
+    Card: '#7C3AED'  // violet-600
+};
 
 export default function Dashboard() {
     const { stats, loading, refresh } = useDashboard();
@@ -37,7 +41,9 @@ export default function Dashboard() {
         { label: "Low Stock Items", value: stats.lowStockCount, icon: AlertTriangle, color: "text-orange-600", bg: "bg-orange-50", warning: true },
     ];
 
-    const paymentData = Object.entries(stats.paymentSplit).map(([name, value]) => ({ name, value }));
+    const paymentData = Object.entries(stats.paymentSplit)
+        .filter(([_, value]) => value > 0) // Only show non-zero
+        .map(([name, value]) => ({ name, value }));
 
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
@@ -55,6 +61,7 @@ export default function Dashboard() {
 
     return (
         <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700">
+            {/* Header and KPI Cards unchanged, skipping for brevity in replacement... wait I must replace full block if I want to be safe or use precise matching. I will use precise matching for the Payment Chart section. */}
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-semibold text-stone-800 tracking-tight">Dashboard</h1>
@@ -168,17 +175,18 @@ export default function Dashboard() {
                                     dataKey="value"
                                     stroke="none"
                                 >
-                                    {paymentData.map((_, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} className="focus:outline-none" />
+                                    {paymentData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={PAYMENT_COLORS[entry.name] || '#ccc'} className="focus:outline-none" />
                                     ))}
                                 </Pie>
                                 <Tooltip
                                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                                     formatter={(value: any) => [`₹${value}`, 'Amount']}
+                                    itemStyle={{ color: '#10b981' }}
                                 />
                             </PieChart>
                         </ResponsiveContainer>
-                        {/* Center Text for Donut - Total? or just icon */}
+                        {/* Center Text for Donut */}
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                             <div className="text-center">
                                 <span className="block text-2xl font-bold text-stone-800">{stats.totalBills}</span>
@@ -189,7 +197,7 @@ export default function Dashboard() {
                     <div className="flex justify-center gap-4 mt-8 flex-wrap">
                         {paymentData.map((entry, index) => (
                             <div key={entry.name} className="flex items-center gap-2 text-sm text-gray-500 font-medium">
-                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: PAYMENT_COLORS[entry.name] || '#ccc' }} />
                                 {entry.name}
                             </div>
                         ))}

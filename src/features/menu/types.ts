@@ -1,13 +1,12 @@
 import { Timestamp } from "firebase/firestore";
 
-export type MenuItemCategory = "Breakfast" | "Lunch" | "Dinner" | "Snacks" | "Sweets";
+export type MenuItemCategory = "Breakfast" | "Lunch" | "Dinner" | "Snacks";
 
 export const MENU_CATEGORIES: MenuItemCategory[] = [
     "Breakfast",
     "Lunch",
     "Dinner",
     "Snacks",
-    "Sweets",
 ];
 
 export interface MenuItem {

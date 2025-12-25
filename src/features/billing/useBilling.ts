@@ -33,48 +33,67 @@ export function useBilling() {
             let newBillId = "";
 
             await runTransaction(db, async (transaction) => {
-                // ... existing logic ...
-                // 1. Check Stock
-                for (const item of items) {
-                    const itemRef = doc(db, "menuItems", item.itemId);
-                    const itemDoc = await transaction.get(itemRef);
+                // 1. READ ALL DATA FIRST
 
-                    if (!itemDoc.exists()) throw new Error(`Item ${item.name} not found`);
+                // Read all item docs
+                const itemDocs = await Promise.all(items.map(async item => {
+                    const ref = doc(db, "menuItems", item.itemId);
+                    const snapshot = await transaction.get(ref);
+                    return { ref, snapshot, orderItem: item };
+                }));
 
-                    const itemData = itemDoc.data() as MenuItem;
-                    const newSold = itemData.soldQuantity + item.quantity;
+                // Read counter doc
+                const counterRef = doc(db, "settings", "counters");
+                const counterDoc = await transaction.get(counterRef);
+
+                // 2. VALIDATE & CALCULATE UPDATES (In Memory)
+
+                // Validate Items & Prepare Stock Updates
+                const stockUpdates = [];
+                for (const { ref: itemRef, snapshot, orderItem } of itemDocs) {
+                    if (!snapshot.exists()) {
+                        throw new Error(`Item ${orderItem.name} not found`);
+                    }
+
+                    const itemData = snapshot.data() as MenuItem;
+                    const newSold = itemData.soldQuantity + orderItem.quantity;
                     const prepared = itemData.preparedQuantity;
                     const remaining = prepared - newSold;
 
                     if (remaining < 0) {
-                        throw new Error(`Insufficient stock for ${item.name}. Available: ${prepared - itemData.soldQuantity}`);
+                        throw new Error(`Insufficient stock for ${orderItem.name}. Available: ${prepared - itemData.soldQuantity}`);
                     }
 
-                    // 2. Update Stock
                     let updates: any = { soldQuantity: newSold };
-
-                    // Auto disable if stock hits 0 and setting enabled
                     if (remaining === 0 && settings.autoDisableStock) {
                         updates.available = false;
                     }
-
-                    transaction.update(itemRef, updates);
+                    stockUpdates.push({ ref: itemRef, data: updates });
                 }
 
-                // 3. Generate Bill Number
-                const counterRef = doc(db, "settings", "counters");
-                const counterDoc = await transaction.get(counterRef);
+                // Calculate Bill Sequence
                 let seq = 1;
                 if (counterDoc.exists()) {
                     seq = counterDoc.data().billSequence + 1;
+                }
+
+                const billNumber = `${settings.billPrefix}-${String(seq).padStart(4, '0')}`;
+
+                // 3. EXECUTE ALL WRITES (Atomic)
+
+                // Update Items
+                for (const update of stockUpdates) {
+                    transaction.update(update.ref, update.data);
+                }
+
+                // Update Counter
+                if (counterDoc.exists()) {
                     transaction.update(counterRef, { billSequence: seq });
                 } else {
                     transaction.set(counterRef, { billSequence: 1 });
                 }
 
-                const billNumber = `${settings.billPrefix}-${String(seq).padStart(4, '0')}`;
-
-                // 4. Create Bill
+                // Create Bill
                 const newBillRef = doc(collection(db, "orders"));
                 newBillId = newBillRef.id;
                 const newBill: Bill = {

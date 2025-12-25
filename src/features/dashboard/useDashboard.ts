@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
+import { collection, query, where, Timestamp, onSnapshot } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { startOfDay, endOfDay } from "date-fns";
 import type { Bill } from "../billing/types";
+import type { MenuItem } from "../menu/types";
 
 export interface DashboardStats {
     totalRevenue: number;
@@ -23,42 +24,36 @@ export function useDashboard() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchDashboardData();
-    }, []);
-
-    const fetchDashboardData = async () => {
         setLoading(true);
-        try {
-            const todayStart = startOfDay(new Date());
-            const todayEnd = endOfDay(new Date());
+        const todayStart = startOfDay(new Date());
+        const todayEnd = endOfDay(new Date());
 
-            // 1. Fetch Today's Orders
-            const ordersQuery = query(
-                collection(db, "orders"),
-                where("date", ">=", Timestamp.fromDate(todayStart)),
-                where("date", "<=", Timestamp.fromDate(todayEnd))
-            );
-            const ordersSnap = await getDocs(ordersQuery);
-            const orders = ordersSnap.docs.map(d => d.data() as Bill).filter(o => o.status === "Completed");
+        // 1. Orders Listener
+        const ordersQuery = query(
+            collection(db, "orders"),
+            where("createdAt", ">=", Timestamp.fromDate(todayStart)),
+            where("createdAt", "<=", Timestamp.fromDate(todayEnd))
+        );
 
-            // 2. Fetch Stock for Low Stock Alert
-            const itemsQuery = query(collection(db, "menuItems"));
-            // Ideally query only available=true or just all to count low stock
-            const itemsSnap = await getDocs(itemsQuery);
-            let lowStockCount = 0;
-            itemsSnap.forEach(doc => {
-                const data = doc.data();
-                const remaining = (data.preparedQuantity || 0) - (data.soldQuantity || 0);
-                if (remaining < 10 && remaining > 0) lowStockCount++;
-            });
+        // 2. Menu Items Listener (for Low Stock)
+        // We listen to all items to count low stock.
+        const itemsQuery = query(collection(db, "menuItems"));
 
-            // 3. Process Stats
-            const totalRevenue = orders.reduce((sum, o) => sum + o.totalAmount, 0);
-            const totalBills = orders.length;
+        let ordersData: Bill[] = [];
+        let lowStockCount = 0;
+        let initialLoadOrders = false;
+        let initialLoadItems = false;
+
+        const processStats = () => {
+            if (!initialLoadOrders || !initialLoadItems) return;
+
+            const completedOrders = ordersData.filter(o => o.status === "Completed");
+            const totalRevenue = completedOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+            const totalBills = completedOrders.length;
             const avgBillValue = totalBills > 0 ? Math.round(totalRevenue / totalBills) : 0;
 
             const paymentSplit = { Cash: 0, UPI: 0, Card: 0 };
-            orders.forEach(o => {
+            completedOrders.forEach(o => {
                 if (paymentSplit[o.paymentMode] !== undefined) {
                     paymentSplit[o.paymentMode] += o.totalAmount;
                 }
@@ -66,8 +61,8 @@ export function useDashboard() {
 
             // Revenue by Hour
             const hoursMap = new Map<number, number>();
-            orders.forEach(o => {
-                const hour = o.date.toDate().getHours();
+            completedOrders.forEach(o => {
+                const hour = o.createdAt.toDate().getHours();
                 hoursMap.set(hour, (hoursMap.get(hour) || 0) + o.totalAmount);
             });
 
@@ -78,22 +73,16 @@ export function useDashboard() {
 
             // Category Sales
             const catMap = new Map<string, number>();
-            orders.forEach(o => {
+            completedOrders.forEach(o => {
                 o.items.forEach(item => {
-                    // We don't have category in BillItem, need to fetch or store it?
-                    // Limitation: BillItem stores itemId/name. We can't easily group by Category without looking up.
-                    // For now, let's group by Item Name or just Skip Category if expensive, 
-                    // OR we modify useBilling to store category in BillItem (Better).
-                    // Assuming we can't change schema easily now, let's do top items instead?
-                    // Or simpler: Map itemName -> quantity.
                     catMap.set(item.name, (catMap.get(item.name) || 0) + item.total);
                 });
             });
-            // Convert to array
+
             const categorySales = Array.from(catMap.entries())
                 .map(([name, value]) => ({ name, value }))
                 .sort((a, b) => b.value - a.value)
-                .slice(0, 5); // Top 5 items really
+                .slice(0, 5);
 
             setStats({
                 totalRevenue,
@@ -101,16 +90,44 @@ export function useDashboard() {
                 avgBillValue,
                 paymentSplit,
                 revenueByHour,
-                categorySales, // Top 5 Items actually
+                categorySales,
                 lowStockCount
             });
-
-        } catch (err) {
-            console.error("Dashboard Error:", err);
-        } finally {
             setLoading(false);
-        }
-    };
+        };
 
-    return { stats, loading, refresh: fetchDashboardData };
+        const unsubOrders = onSnapshot(ordersQuery, (snapshot) => {
+            ordersData = snapshot.docs.map(doc => doc.data() as Bill);
+            initialLoadOrders = true;
+            processStats();
+        }, (err) => {
+            console.error("Error fetching orders:", err);
+            setLoading(false);
+        });
+
+        const unsubItems = onSnapshot(itemsQuery, (snapshot) => {
+            let count = 0;
+            snapshot.docs.forEach(doc => {
+                const data = doc.data() as MenuItem;
+                const remaining = (data.preparedQuantity || 0) - (data.soldQuantity || 0);
+                if (remaining < 10 && remaining > 0) count++;
+            });
+            lowStockCount = count;
+            initialLoadItems = true;
+            processStats();
+        }, (err) => {
+            console.error("Error fetching menu items:", err);
+            setLoading(false);
+        });
+
+        return () => {
+            unsubOrders();
+            unsubItems();
+        };
+    }, []);
+
+    // Manually refresh is no longer needed but kept for compatibility interface
+    const refresh = () => { };
+
+    return { stats, loading, refresh };
 }

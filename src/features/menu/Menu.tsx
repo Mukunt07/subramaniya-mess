@@ -1,16 +1,41 @@
 import { useState } from "react";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import { useMenu } from "./useMenu";
-import { Plus, Search, Edit2, AlertCircle, CheckCircle2, XCircle } from "lucide-react";
+import { Plus, Search, Edit2, AlertCircle, CheckCircle2, XCircle, Trash2, Database, ArrowUpDown } from "lucide-react";
 import type { MenuItem, MenuItemCategory, MenuItemInput } from "./types";
 import { MENU_CATEGORIES } from "./types";
 import { cn } from "../../lib/utils";
+import { DEFAULT_MENU_ITEMS } from "./defaultMenu";
 
 export default function MenuPage() {
-    const { items, loading, addItem, updateItem, toggleAvailability } = useMenu();
+    const { items, loading, addItem, updateItem, toggleAvailability, restoreDefaults, deleteItem } = useMenu();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
+    const [activeTab, setActiveTab] = useState<"All" | MenuItemCategory>("All");
+    const [sortOption, setSortOption] = useState<"name-asc" | "name-desc" | "price-asc" | "price-desc">("name-asc");
     const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+
+    const handleSeedMenu = async () => {
+        if (!confirm("Are you sure you want to initialize the default menu items?")) return;
+
+        const result = await restoreDefaults(DEFAULT_MENU_ITEMS);
+        if (result && result.success) {
+            alert(`Process Completed!\n\nAdded: ${result.added} new items\nSkipped: ${result.skipped} duplicates`);
+        } else {
+            alert("Failed to add default items. Please try again.");
+        }
+    };
+
+    const handleDelete = async (id: string, name: string) => {
+        if (!confirm(`Are you sure you want to delete "${name}"? This cannot be undone.`)) return;
+
+        const success = await deleteItem(id, name);
+        if (success) {
+            // Toast success?
+        } else {
+            alert("Failed to delete item.");
+        }
+    };
 
     // Form State
     const [formData, setFormData] = useState<MenuItemInput>({
@@ -20,10 +45,29 @@ export default function MenuPage() {
         preparedQuantity: 0,
     });
 
-    const filteredItems = items.filter(item =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.category.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredItems = items.filter(item => {
+        const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.category.toLowerCase().includes(searchTerm.toLowerCase());
+
+        // If user is searching, show results from ALL categories (ignore tab)
+        if (searchTerm) return matchesSearch;
+
+        const matchesTab = activeTab === "All" || item.category === activeTab;
+        return matchesTab;
+    }).sort((a, b) => {
+        switch (sortOption) {
+            case "name-asc":
+                return a.name.localeCompare(b.name);
+            case "name-desc":
+                return b.name.localeCompare(a.name);
+            case "price-asc":
+                return a.price - b.price;
+            case "price-desc":
+                return b.price - a.price;
+            default:
+                return 0;
+        }
+    });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -82,6 +126,14 @@ export default function MenuPage() {
                     <p className="text-stone-500 text-sm mt-1 font-medium">Manage food items, prices, and daily stock</p>
                 </div>
                 <button
+                    onClick={handleSeedMenu}
+                    className="bg-white border border-stone-200 text-stone-600 hover:bg-stone-50 px-4 py-2.5 rounded-lg font-medium flex items-center gap-2 shadow-sm transition-colors mr-3"
+                    title="Populate with default items"
+                >
+                    <Database className="w-5 h-5" />
+                    Load Defaults
+                </button>
+                <button
                     onClick={openAddModal}
                     className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg font-medium flex items-center gap-2 shadow-sm transition-colors"
                 >
@@ -91,91 +143,123 @@ export default function MenuPage() {
             </div>
 
             {/* Filters */}
-            <div className="mb-6 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                    type="text"
-                    placeholder="Search items by name or category..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
-                />
+            <div className="mb-6 space-y-4">
+                {/* Tabs */}
+                <div className="flex flex-wrap gap-2 pb-2">
+                    {["All", ...MENU_CATEGORIES].map((tab) => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab as any)}
+                            className={cn(
+                                "px-4 py-2 rounded-full text-sm font-medium transition-all duration-200",
+                                activeTab === tab
+                                    ? "bg-stone-900 text-white shadow-md shadow-stone-900/20"
+                                    : "bg-white text-stone-500 hover:bg-stone-100 border border-stone-200"
+                            )}
+                        >
+                            {tab}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="flex gap-4">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Search items by name..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                        />
+                    </div>
+                    <div className="relative w-48">
+                        <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <select
+                            value={sortOption}
+                            onChange={(e) => setSortOption(e.target.value as any)}
+                            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all appearance-none bg-white cursor-pointer"
+                        >
+                            <option value="name-asc">Name (A-Z)</option>
+                            <option value="name-desc">Name (Z-A)</option>
+                            <option value="price-asc">Price (Low-High)</option>
+                            <option value="price-desc">Price (High-Low)</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
             {/* Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {filteredItems.map((item) => {
                     const remaining = item.preparedQuantity - item.soldQuantity;
-                    const isLowStock = remaining < 10 && remaining > 0; // Hardcoded generic threshold for UI, proper one in settings
+                    const isLowStock = remaining < 10 && remaining > 0;
                     const isOutOfStock = remaining <= 0;
 
                     return (
-                        <div key={item.id} className="bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow group">
-                            <div className="p-5">
-                                <div className="flex justify-between items-start mb-2">
-                                    <span className="inline-block px-2.5 py-1 rounded-full text-xs font-medium bg-stone-100 text-stone-600">
+                        <div key={item.id} className="bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden hover:shadow-md transition-all group aspect-square flex flex-col relative">
+                            <div className="p-3 flex flex-col h-full">
+                                {/* Top: Category & Actions */}
+                                <div className="flex justify-between items-start">
+                                    <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-stone-100 text-stone-600 tracking-tight">
                                         {item.category}
                                     </span>
-                                    <div className="flex gap-1">
+                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button
                                             onClick={() => openEditModal(item)}
-                                            className="p-1.5 text-stone-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                            className="p-1 text-stone-400 hover:text-emerald-600 hover:bg-emerald-50 rounded"
+                                            title="Edit Item"
                                         >
-                                            <Edit2 className="w-4 h-4" />
+                                            <Edit2 className="w-3.5 h-3.5" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(item.id, item.name)}
+                                            className="p-1 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded"
+                                            title="Delete Item"
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" />
                                         </button>
                                     </div>
                                 </div>
 
-                                <h3 className="font-semibold text-stone-900 text-lg mb-1 tracking-tight">{item.name}</h3>
-                                <div className="text-2xl font-semibold text-emerald-600 mb-4">₹{item.price}</div>
+                                {/* Center: Info */}
+                                <div className="flex-1 flex flex-col justify-center items-center text-center -mt-1">
+                                    <h3 className="font-bold text-stone-900 text-lg leading-tight mb-1 line-clamp-2" title={item.name}>{item.name}</h3>
+                                    <div className="text-xl font-bold text-emerald-600">₹{item.price}</div>
+                                </div>
 
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between text-sm">
-                                        <span className="text-stone-500 font-medium">Stock Status</span>
-                                        <button
-                                            onClick={() => toggleAvailability(item.id, item.available)}
-                                            className={cn(
-                                                "flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-medium text-xs transition-colors",
-                                                item.available
-                                                    ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-                                                    : "bg-red-100 text-red-700 hover:bg-red-200"
-                                            )}
-                                        >
-                                            {item.available ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
-                                            {item.available ? "Available" : "Unavailable"}
-                                        </button>
+                                {/* Bottom: Stats & Toggle */}
+                                <div className="mt-auto space-y-2">
+                                    {/* Mini Stats Row */}
+                                    <div className="flex justify-center divide-x divide-stone-200 text-[10px] text-stone-500">
+                                        <div className="px-2">Prep <span className="font-semibold text-stone-900">{item.preparedQuantity}</span></div>
+                                        <div className="px-2">Sold <span className="font-semibold text-stone-900">{item.soldQuantity}</span></div>
+                                        <div className="px-2">Rem <span className={cn("font-bold", isOutOfStock ? "text-red-600" : "text-emerald-600")}>{remaining}</span></div>
                                     </div>
 
-                                    <div className="bg-stone-50 rounded-lg p-3 space-y-2">
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-stone-500">Prepared</span>
-                                            <span className="font-medium text-stone-900">{item.preparedQuantity}</span>
-                                        </div>
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-stone-500">Sold</span>
-                                            <span className="font-medium text-stone-900">{item.soldQuantity}</span>
-                                        </div>
-                                        <div className="pt-2 border-t border-stone-200 flex justify-between items-center">
-                                            <span className="text-xs font-medium text-stone-500 uppercase tracking-wide">Remaining</span>
-                                            <span className={cn(
-                                                "font-semibold",
-                                                isOutOfStock ? "text-red-600" : isLowStock ? "text-orange-600" : "text-emerald-600"
-                                            )}>
-                                                {remaining}
-                                            </span>
-                                        </div>
-                                    </div>
+                                    <button
+                                        onClick={() => toggleAvailability(item.id, item.available)}
+                                        className={cn(
+                                            "w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors border",
+                                            item.available
+                                                ? "bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100"
+                                                : "bg-stone-50 text-stone-500 border-stone-200 hover:bg-stone-100"
+                                        )}
+                                    >
+                                        {item.available ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
+                                        {item.available ? "AVAILABLE" : "UNAVAILABLE"}
+                                    </button>
                                 </div>
                             </div>
 
-                            {/* Progress bar for stock */}
-                            <div className="h-1.5 w-full bg-gray-100">
+                            {/* Stock Bar */}
+                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-100">
                                 <div
                                     className={cn(
                                         "h-full transition-all duration-500",
                                         isOutOfStock ? "bg-red-500" : isLowStock ? "bg-orange-500" : "bg-emerald-500"
                                     )}
-                                    style={{ width: `${Math.min(100, (remaining / item.preparedQuantity) * 100)}%` }} // Simple calc
+                                    style={{ width: `${Math.min(100, (remaining / item.preparedQuantity) * 100)}%` }}
                                 />
                             </div>
                         </div>
