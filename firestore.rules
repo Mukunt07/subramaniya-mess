@@ -6,13 +6,18 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Rules
+    // Explicitly allow creating a user document if the auth matches
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Settings
     match /settings/{document} {
-      allow read: if true; // Login page might need settings? Or restricted? Admin only best.
+      allow read: if true; 
       allow write: if isAdmin();
     }
     
-    // Actually, everything should be admin only
+    // Default fallback
     match /{document=**} {
       allow read, write: if isAdmin();
     }

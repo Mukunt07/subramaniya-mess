@@ -3,6 +3,7 @@ import { LayoutDashboard, UtensilsCrossed, FileText, Settings, LogOut, TrendingU
 import { useAuth } from "../../features/auth/AuthContext";
 import { auth } from "../../lib/firebase";
 import { cn } from "../../lib/utils";
+import { useSettings } from "../../features/settings/useSettings";
 
 const NAV_ITEMS = [
     { label: "Dashboard", path: "/", icon: LayoutDashboard },
@@ -16,6 +17,7 @@ const NAV_ITEMS = [
 export default function Sidebar() {
     const location = useLocation();
     const { } = useAuth(); // Just to checking if user exists, already protected by layout
+    const { settings } = useSettings();
 
     const handleLogout = () => {
         if (confirm("Are you sure you want to logout?")) {
@@ -30,7 +32,7 @@ export default function Sidebar() {
                     <UtensilsCrossed className="w-6 h-6 text-emerald-500" />
                 </div>
                 <div>
-                    <h1 className="font-bold text-white text-lg leading-tight">Veg Mess</h1>
+                    <h1 className="font-bold text-white text-lg leading-tight">{settings.restaurantName || "Veg Mess"}</h1>
                     <p className="text-xs text-stone-500">Admin Panel</p>
                 </div>
             </div>
